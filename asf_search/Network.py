@@ -75,10 +75,8 @@ class Network(Stack):
             )
 
         self._build_sbas_stack()
-        print('subset',len(self.subset_stack))
         if self.additional_multiburst_networks:
             self._interesect_multiburst_stacks()
-        print('subset2',len(self.subset_stack))
         # warn user if they lack optional dependencies for plotting
         missing_optional_deps = []
         if importlib.util.find_spec("plotly") is None:
@@ -147,7 +145,6 @@ class Network(Stack):
         all_subset_stacks.append(self.subset_stack)
         all_subset_pairs = [kv[0] for subset_stack in all_subset_stacks for kv in subset_stack.items()]
         all_subset_pairs_count = Counter(all_subset_pairs)
-        print('all',len(all_subset_pairs),len(all_subset_pairs_count))
         underrepresented_pairs = [pair for pair in all_subset_pairs_count
                                   if all_subset_pairs_count[pair] < len(self.additional_multiburst_networks) + 1]
 
