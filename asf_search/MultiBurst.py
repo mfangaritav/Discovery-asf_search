@@ -63,7 +63,8 @@ class MultiBurst:
             raise MultipleOrbitError(msg)
 
         component_count, hole_count = self.count_components_and_holes()
-        if component_count > 1 or hole_count > 0:
+        #if component_count > 1 or hole_count > 0:
+        if not self.check_components_and_holes():
             msg = (
                 "Multiburst collections must be comprised of a single connected component and have no holes.\n"
                 f"Connected Components: {component_count}, Holes: {hole_count}"
@@ -88,6 +89,24 @@ class MultiBurst:
             grid.append(include_list)
         return grid
     
+    def check_components_and_holes(self):
+        #Check vertical holes
+        multiburst_dict = self.multiburst_dict
+        ranges = dict()
+        for swath in ["IW1","IW2","IW3"]:
+            ids = sorted(list(set([bid for bid in multiburst_dict.keys() if swath in multiburst_dict[bid]])))
+            if len(ids) > 0:
+                ranges[swath] = (int(ids[0].split('_')[1]), int(ids[-1].split('_')[1]))
+                burst_ids = [int(id.split('_')[1]) for id in ids]
+                if burst_ids != list(range(min(burst_ids), max(burst_ids) + 1)):
+                    return False
+        if "IW1" in ranges.keys() and "IW2" in ranges.keys():
+            return (abs(ranges["IW1"][0]-ranges["IW2"][0]) <= 1 and abs(ranges["IW1"][1]-ranges["IW2"][1]) <= 1)
+        if "IW2" in ranges.keys() and "IW3" in ranges.keys():
+            return (abs(ranges["IW2"][0]-ranges["IW3"][0]) <= 1 and abs(ranges["IW2"][1]-ranges["IW3"][1]) <= 1)
+        if "IW1" in ranges.keys() and "IW3" in ranges.keys() and "IW2" not in ranges.keys():
+            return False
+        return True
     def count_components_and_holes(self):
         """
         Performs a BFS search to count connected components and holes

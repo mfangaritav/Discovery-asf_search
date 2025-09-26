@@ -1,4 +1,5 @@
 
+import fsspec
 import importlib.util
 import math
 import warnings
@@ -91,14 +92,15 @@ class Pair:
                    Temporal baseline: {self.temporal.days} days""")
             raise CoherenceEstimationError(msg)
 
+        temporal = str(temporal).zfill(2)
         uri = f"s3://asf-search-coh/global_coh_100ppd_11367x4367/Global_{season}_vv_COH{temporal}_100ppd.zarr"
         coords = self.ref.geometry['coordinates'][0]
         lons, lats = zip(*coords)
         minx, miny, maxx, maxy = min(lons), min(lats), max(lons), max(lats)
 
         ds = xr.open_zarr(
-            uri,
-            consolidated=True
+            fsspec.get_mapper(uri, s3={'anon': True}),
+            consolidated=True,
             )
         ds = ds.rio.write_crs("EPSG:4326", inplace=False)
         subset = ds.rio.clip_box(minx=minx, miny=miny, maxx=maxx, maxy=maxy)

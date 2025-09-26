@@ -201,6 +201,8 @@ class Network(Stack):
         """
         remove_list = []
         for pair in self.full_stack.values():
+            if pair.perpendicular is None:
+                pair.perpendicular = 10000
             if np.abs(pair.perpendicular) > self.perp_baseline or not \
                 self._passes_temporal_check(pair):
                 remove_list.append((pair.ref_date, pair.sec_date))
@@ -218,7 +220,7 @@ class Network(Stack):
         years = list(set([date.strftime('%Y') for date in sub]))
         dates_target = []
         for year in years:
-            target = datetime.strptime(f"{year}-{self.bridge_target_date}",'%Y-%m-%d').date()
+            target = datetime.strptime(f"{year}-{bridge_target}",'%Y-%m-%d').date()
             s = [date for date in sub if abs((date-target).days) <= self.inseason_temporal_baseline]
             if len(s) > 0:
                 dates_target.append(s)
