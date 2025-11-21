@@ -177,8 +177,8 @@ class Stack:
         """
         stack = {}
         for _, pair in self.full_stack.items():
-            if (pair.ref_date, pair.sec_date) not in self.remove_list:
-                stack[(pair.ref_date, pair.sec_date)] = pair
+            if (pair.ref_time.date(), pair.sec_time.date()) not in self.remove_list:
+                stack[(pair.ref_time.date(), pair.sec_time.date())] = pair
         return stack
 
     def _update_stack(self):
@@ -196,8 +196,8 @@ class Stack:
 
         graph = defaultdict(list)
         for pair in self.subset_stack.values():
-            graph[pair.ref_date].append(pair.sec_date)
-            graph[pair.sec_date].append(pair.ref_date)
+            graph[pair.ref_time.date()].append(pair.sec_time.date())
+            graph[pair.sec_time.date()].append(pair.ref_time.date())
 
         visited_nodes = set()
         visited_pairs = set()
@@ -218,9 +218,9 @@ class Stack:
                     for neighbor in graph[current]:
                         if (current, neighbor) not in visited_pairs and (neighbor, current) not in visited_pairs:
                             for pair in self.subset_stack.values():
-                                if (pair.ref_date == current and pair.sec_date == neighbor) or \
-                                    (pair.sec_date == current and pair.ref_date == neighbor):
-                                    component_pairs[(pair.ref_date, pair.sec_date)] = pair
+                                if (pair.ref_time.date() == current and pair.sec_time.date() == neighbor) or \
+                                    (pair.sec_time.date() == current and pair.ref_time.date() == neighbor):
+                                    component_pairs[(pair.ref_time.date(), pair.sec_time.date())] = pair
                                     break
                             visited_pairs.add((current, neighbor))
                             visited_pairs.add((neighbor, current))
