@@ -165,7 +165,7 @@ class Network(Stack):
         pair: the Pair to check
         """
         # return True right away if pair within inseason temp baseline
-        if pair.temporal.days <= self.inseason_temporal_baseline:
+        if pair.temporal_baseline.days <= self.inseason_temporal_baseline:
             return True
 
         # determine season length, accounting for seasons that span years (e.g. Nov-May)
@@ -179,8 +179,8 @@ class Network(Stack):
             # determine how far ref scene date is from target multi-annual bridge date 
             days_from_bridge_date = np.abs(
                 (
-                    datetime.strptime(f"{self.bridge_target_date}-{pair.ref_date.year}", "%m-%d-%Y").date() 
-                    - pair.ref_date).days
+                    datetime.strptime(f"{self.bridge_target_date}-{pair.ref_time.date().year}", "%m-%d-%Y").date() 
+                    - pair.ref_time.date()).days
                 )
             # Create lists of valid secondary scene date ranges.
             # The number of years bridged is determined by the bridge_year_threshold.
@@ -191,7 +191,7 @@ class Network(Stack):
             # return True if the ref scene is within the inseason_temporal_baseline of
             # the target bridge date and the secondary scene falls within a valid date range
             return days_from_bridge_date <= self.inseason_temporal_baseline and \
-                any(start <= pair.temporal.days <= end for start, end in valid_ranges)
+                any(start <= pair.temporal_baseline.days <= end for start, end in valid_ranges)
         else:
             return False
 
@@ -201,11 +201,11 @@ class Network(Stack):
         """
         remove_list = []
         for pair in self.full_stack.values():
-            if pair.perpendicular is None:
-                pair.perpendicular = 10000
-            if np.abs(pair.perpendicular) > self.perp_baseline or not \
+            if pair.perpendicular_baseline is None:
+                pair.perpendicular_baseline = 10000
+            if np.abs(pair.perpendicular_baseline) > self.perp_baseline or not \
                 self._passes_temporal_check(pair):
-                remove_list.append((pair.ref_date, pair.sec_date))
+                remove_list.append((pair.ref_time.date(), pair.sec_time.date()))
         self.remove_list = remove_list
 
     def get_target_dates(self, sub, bridge_target = None):
@@ -353,7 +353,7 @@ class Network(Stack):
         node_products = {}
         for stack in stack_dicts:
             for pair in stack.values():
-                for date_obj, product in [(pair.ref_date, pair.ref), (pair.sec_date, pair.sec)]:
+                for date_obj, product in [(pair.ref_time.date(), pair.ref), (pair.sec_time.date(), pair.sec)]:
                     date_str = datetime.strftime(date_obj, "%Y-%m-%d")
                     if date_str not in node_products:
                         node_products[date_str] = product
@@ -362,7 +362,7 @@ class Network(Stack):
         for date_str, product in node_products.items():
             G.add_node(date_str)
             G.nodes[date_str]["date"] = date_str
-            G.nodes[date_str]["perp_bs"] = Pair(self.geo_reference, product).perpendicular
+            G.nodes[date_str]["perp_bs"] = Pair(self.geo_reference, product).perpendicular_baseline
 
         node_positions = {
             node: datetime.strptime(data["date"], "%Y-%m-%d").timestamp()
@@ -375,11 +375,11 @@ class Network(Stack):
         # Add blue edges for the largest stack
         insar_node_pairs = [
             (
-                datetime.strftime(pair.ref_date, "%Y-%m-%d"),
-                datetime.strftime(pair.sec_date, "%Y-%m-%d"),
+                datetime.strftime(pair.ref_time.date(), "%Y-%m-%d"),
+                datetime.strftime(pair.sec_time.date(), "%Y-%m-%d"),
                 {
-                    "perp_bs": pair.perpendicular,
-                    "temp_bs": pair.temporal.days
+                    "perp_bs": pair.perpendicular_baseline,
+                    "temp_bs": pair.temporal_baseline.days
                 }
             )
             for pair in largest_stack.values()
@@ -429,8 +429,8 @@ class Network(Stack):
             edge_x = []
             edge_y = []
             for pair in other_stack.values():
-                ref = datetime.strftime(pair.ref_date, "%Y-%m-%d")
-                sec = datetime.strftime(pair.sec_date, "%Y-%m-%d")
+                ref = datetime.strftime(pair.ref_time.date(), "%Y-%m-%d")
+                sec = datetime.strftime(pair.sec_time.date(), "%Y-%m-%d")
                 if ref in node_positions and sec in node_positions:
                     edge_x.extend([node_positions[ref], node_positions[sec], None])
                     edge_y.extend([node_y_positions[ref], node_y_positions[sec], None])
@@ -445,11 +445,11 @@ class Network(Stack):
             hover_x = []
             hover_y = []
             for pair in other_stack.values():
-                ref = datetime.strftime(pair.ref_date, "%Y-%m-%d")
-                sec = datetime.strftime(pair.sec_date, "%Y-%m-%d")
+                ref = datetime.strftime(pair.ref_time.date(), "%Y-%m-%d")
+                sec = datetime.strftime(pair.sec_time.date(), "%Y-%m-%d")
                 if ref in node_positions and sec in node_positions:
                     edge_text.append(
-                        f"{ref} - {sec}, perp baseline: {pair.perpendicular}, temp baseline: {pair.temporal.days}"
+                        f"{ref} - {sec}, perp baseline: {pair.perpendicular_baseline}, temp baseline: {pair.temporal_baseline.days}"
                     )
                     hover_x.append((node_positions[ref] + node_positions[sec]) / 2)
                     hover_y.append((node_y_positions[ref] + node_y_positions[sec]) / 2)
@@ -487,7 +487,7 @@ class Network(Stack):
 
         unused_slc_dates_str = [i.properties["stopTime"].split("T")[0] for i in unused_slcs]
         unused_slc_dates_x = [datetime.strptime(i, "%Y-%m-%d").timestamp() for i in unused_slc_dates_str]
-        unused_slc_perp_y = [Pair(self.geo_reference, i).perpendicular for i in unused_slcs]
+        unused_slc_perp_y = [Pair(self.geo_reference, i).perpendicular_baseline for i in unused_slcs]
 
         unused_slcs_trace = go.Scatter(
             x=unused_slc_dates_x, y=unused_slc_perp_y,
