@@ -34,6 +34,13 @@ asf_enumeration = [
     'asf-enumeration>=0.3.0'
 ]
 
+#Required for seasonal SBAS
+sbas = [
+    'pandas',
+    'zarr',
+    's3fs',
+    'rioxarray',
+]
 
 with open('README.md', 'r') as readme_file:
     readme = readme_file.read()
