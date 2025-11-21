@@ -42,14 +42,14 @@ class MultiBurst:
         Based on these considerations for selecting multiple bursts:
         https://hyp3-docs.asf.alaska.edu/guides/burst_insar_product_guide/#considerations-for-selecting-input-bursts
 
-        - Sets of bursts must contain 1-15 bursts
+        - Sets of bursts must contain 1-30 bursts
         - Burst collection must be contiguous
         - Bursts collections cannot contain holes
         - Bursts crossing the Antimeridian are not supported
         """
-        if not 0 < len(self.burst_ids) <= 15:
+        if not 0 < len(self.burst_ids) <= 30:
             msg = (
-                "HyP3 supports multiburst jobs of size 1-15.\n"
+                "HyP3 supports multiburst jobs of size 1-30.\n"
                 f"multiburst_dict contains {len(self.burst_ids)} bursts"
             )
             raise InvalidMultiBurstCountError(msg)
