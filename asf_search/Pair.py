@@ -98,6 +98,8 @@ class Pair:
             msg = (f"""Coherence dataset includes temporal baselines up to 48 days.
                    Temporal baseline: {self.temporal_baseline.days} days""")
             raise CoherenceEstimationError(msg)
+        else:
+            temporal = str(temporal).zfill(2)
 
         uri = f"s3://asf-search-coh/global_coh_100ppd_11367x4367_Zarrv2/Global_{season}_vv_COH{temporal}_100ppd.zarr"
         coords = self.ref.geometry['coordinates'][0]
