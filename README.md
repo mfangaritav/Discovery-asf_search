@@ -160,7 +160,17 @@ For more configure options on `logging`, please visit [their howto page](https:/
 After installing asf-search's test requirement (see `INSTALL` section above) you can run the test suite locally. Run the following command from your terminal in the root project directory:
 
 ```bash
-python3 -m pytest -n auto .
+python3 -m pytest tests/yml_tests --ignore=tests/yml_tests/test_authenticated
+```
+
+For test cases that require authentication you can use your EDL credentials
+```bash
+python3 -m pytest tests/yml_tests/test_authenticated -s --auth_with_creds
+```
+
+Or if you'd rather use your EDL token
+```bash
+python3 -m pytest tests/yml_tests/test_authenticated -s --auth_with_token
 ```
 
 Tests should be written to relevant subfolder & files in `/tests`

@@ -63,6 +63,8 @@ class JSONLite2StreamArray(JSONLiteStreamArray):
             "w": p.get("wkt"),
             "wu": p.get("wkt_unwrapped"),
             "pge": p.get("pgeVersion"),
+            "adu": p.get("additionalUrls"),
+            's3u': p.get("s3Urls"),
         }
 
         if 'temporalBaseline' in p.keys():
@@ -80,6 +82,12 @@ class JSONLite2StreamArray(JSONLiteStreamArray):
         if p.get('nisar') is not None:
             result['nsr'] = p['nisar']
         
+        if p.get('collectionName') is not None:
+            result["cnm"] = p["collectionName"]
+
+        if p.get('conceptID') is not None:
+            result["cid"] = p["conceptID"]
+
         if p.get('ariaVersion') is not None:
             result['ariav'] = p.get('ariaVersion')
     

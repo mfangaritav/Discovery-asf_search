@@ -26,9 +26,157 @@ and uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 -->
 ------
+## [v12.0.7](https://github.com/asfadmin/Discovery-asf_search/compare/v12.0.6...v12.0.7)
+### Added
+- `granule_list` supports wildcard ("*" and "?") searches
+    - For more information: https://cmr.earthdata.nasa.gov/search/site/docs/search/api.html#parameter-options
+
+------
+## [v12.0.6](https://github.com/asfadmin/Discovery-asf_search/compare/v12.0.5...v12.0.6)
+### Added
+- `utils` module added as top level module
+    - `get_nisar_orbit_ephemeras()` method returns dictionary with latest `NISAR` `POE`, `MOE`, `NOE`, and `FOE` orbit ephemeras
+
+### Fixed
+- Fix track based searches when `processingLevel` specified on `NISAR` dataset searches
+
+------
+## [v12.0.5](https://github.com/asfadmin/Discovery-asf_search/compare/v12.0.4...v12.0.5)
+### Added
+- DIST-ALERT-S1 product type to OPERA dataset
+  - TileID searchable attribute
+  - productVersion attribute
+
+### Fixed
+- Fix edge-case with `platform` & `processingLevel` concept-id aliasing
+
+------
+## [v12.0.4](https://github.com/asfadmin/Discovery-asf_search/compare/v12.0.3...v12.0.4)
+### Fixed
+- Updated `NISAR` dataset/platform concept-ids
+
+------
+## [v12.0.3](https://github.com/asfadmin/Discovery-asf_search/compare/v12.0.2...v12.0.3)
+### Added
+- Add `ariaVersion` as a searchable attribute
+- Add `orbitType` to `NISARProduct` properties dictionary
+
+------
+## [v12.0.2](https://github.com/asfadmin/Discovery-asf_search/compare/v12.0.1...v12.0.2)
+### Added
+- Add `NISAR` product type constants for ancillary/aux products, now useable with `search()` methods. New constants: 
+    `DCOP`,
+    `OROST`,
+    `STUF`,
+    `TEC`,
+    `LRCLK_UTC`,
+    `FOE`,
+    `MOE`,
+    `NOE`,
+    `POE`,
+    `TSR_STATIC`,
+    `PMI_STATIC`,
+    `CORNER_REFL`,
+    `LSAR_INT_CAL`,
+    `LSAR_EXT_CAL`,
+    `FT_WAVEFORM`,
+    `FT_PARAM`,
+    `ANTPAT`,
+    `BFPQ`,
+    `TFDB`,
+    `L_CHAN_DATA`,
+    `SM_STATIC`,
+    `DSG_STATIC`,
+    `FRP`,
+    `PRP`,
+    `NRP`,
+    `ECMWF_SMST`
+
+### Fixed
+- Update `ASF_ECMWF_TROPO` -> `ASF_ECMWF_TROP` in dataset collection short name dictionary
+
+------
+## [v12.0.1](https://github.com/asfadmin/Discovery-asf_search/compare/v12.0.0...v12.0.1)
+### Added
+- `collectionName` and `conceptID` added to `TROPOProduct` properties dict
+
+------
+## [v12.0.0](https://github.com/asfadmin/Discovery-asf_search/compare/v11.0.3...v12.0.0)
+### Added
+- Add `DISP-S1-STATIC` support: product type constant, added to `OPERA-S1` dataset, supported in `OPERAS1Product` class
+- Add `TROPO` dataset for `TROPO-ZENITH` and `ECMWF_TROPO` product types
+- Add new `ASFProduct` subclass `TROPOProduct` for `TROPO-ZENITH` and `ECMWF_TROPO` product types
+
+### Changed
+- Moved `TROPO-ZENITH` out of `OPERA-S1` dataset, now in standalone `TROPO` dataset
+
+------
+## [v11.0.3](https://github.com/asfadmin/Discovery-asf_search/compare/v11.0.2...v11.0.3)
+### Fixed
+- Properly parse multipolygons from NISAR UMM-G that cross dateline, unwrap geometry (add 360 to negative longitude polygon)
+
+------
+## [v11.0.2](https://github.com/asfadmin/Discovery-asf_search/compare/v11.0.1...v11.0.2)
+### Fixed
+- Fixed parsing product byte size on newer ARIA S1-GUNW products
+
+------
+## [v11.0.1](https://github.com/asfadmin/Discovery-asf_search/compare/v11.0.0...v11.0.1)
+### Added
+- `crid` property added to `NISARProduct`
+
+### Changed
+- Dropped `NISAR_STUF` collection from NISAR dataset (Still available when querying `NISAR` via `platform` search keyword)
+
+### Fixed
+- `NISARProduct` class populates property `pathNumber` with `TRACK_NUMBER` field from UMM-G
+    - Searching with `relativeOrbit` with `NISAR` dataset/product types in query automatically searches on `TRACK_NUMBER` instead of `PATH_NUMBER`
+
+------
+## [v11.0.0](https://github.com/asfadmin/Discovery-asf_search/compare/v10.3.0...v11.0.0)
+### Changed
+- `ASF_AUTH_HOST` `auth.asf.alaska.edu` replaced with `cumulus.asf.alaska.edu`. This change should be seamless
+- `auth_with_creds()` now queries `ASF_AUTH_HOST` for `asf-urs` cookie after generating EDL token via `https://urs.earthdata.nasa.gov/api/users/find_or_create_token`
+
+------
+## [v10.3.0](https://github.com/asfadmin/Discovery-asf_search/compare/v10.2.1...v10.3.0)
+### Added
+- Add a Pair class that groups ASFProducts as reference and secondary scenes, and provides temporal and perpendicular baselines as member variables. Pair will be used for creating InSAR SBAS stacks, though its utility extends beyond that use case. A new dependency group `coherence` is included in the `setup.py`.
+
+------
+## [v10.2.1](https://github.com/asfadmin/Discovery-asf_search/compare/v10.2.0...v10.2.1)
+### Added
+- Added `get_searchable_attributes()` search method, return dict mapping of additional attribute names to `AdditionalAttribute` data class object
+
+------
+## [v10.2.0](https://github.com/asfadmin/Discovery-asf_search/compare/v10.1.2...v10.2.0)
+### Changed
+- `SEATSAT 1` collections in CMR have been merged into a new single collection. Filtering by processing level for same scene no longer necessary. Different file urls, s3 uris, sizes, and md5sums of each scene now accessible via `additionalUrls`, `s3Urls`, `bytes`, and `md5sum` keys in each scene's `properties` dict.
+- NISAR products have collection id and collection name in products and jsonlite export
+
+### Added
+- Added authentication test case support for main `master` branch, `--auth_with_creds` and `--auth-with-token` for local test session authentication
+
+### Fixed
+- Removed `CRSD` from NISAR dataset and relevant constants, no longer part of `L0B` science product type
+
+------
+## [v10.1.2](https://github.com/asfadmin/Discovery-asf_search/compare/v10.1.1...v10.1.2)
+### Added
+- Add `CRSD` and `RRSD` constants to `PRODUCT_TYPE`
+- Add docstrings for `DATASET.NISAR` and the various related `PRODUCT_TYPE` constants
+- Add static method `get_stack_opts_for_frame()` to `ARIAS1GUNWProduct` class, returns ARIA frame stack opts for given frame ID
+
+### Fixed
+- No longer query CMR with `L0B` directly, now properly aliased to `CRSD` and `RRSD` product types
+
+### Changed
+- Bump asf-enumeration version minimum version to 0.4.0 for Sentinel-1C support
+
+------
 ## [v10.1.1](https://github.com/asfadmin/Discovery-asf_search/compare/v10.1.0...v10.1.1)
 ### Added
-- Added a Pair class that groups ASFProducts as reference and secondary scenes, and provides temporal and perpendicular baselines as member variables. Pair will be used for creating InSAR SBAS stacks, though its utility extends beyond that use case. A new dependency group `sbas` is included in the `setup.py`
+- Adds `TROPO_ZENITH` OPERA-S1 product type constant to `PRODUCT_TYPE.py` and concept-id to dataset
 
 ------
 ## [v10.1.0](https://github.com/asfadmin/Discovery-asf_search/compare/v10.0.5...v10.1.0)

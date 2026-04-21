@@ -58,6 +58,7 @@ from .Pair import Pair  # noqa:  F401, E402
 from .Stack import Stack  # noqa: F401, E402
 from .Network import Network  # noqa: F401, E402
 from .MultiBurst import MultiBurst  # noqa:  F401, E402
+from . import utils # noqa: F401, E402
 
 REPORT_ERRORS = True
 """Enables automatic search error reporting to ASF, send any questions to uso@asf.alaska.edu"""

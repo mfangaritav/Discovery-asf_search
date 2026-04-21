@@ -3,7 +3,6 @@ from asf_search import ASFSearchOptions, ASFSession
 from asf_search.CMR.translate import try_parse_date, try_parse_int
 from asf_search.Products import S1Product
 
-
 class OPERAS1Product(S1Product):
     """
     ASF Dataset Documentation Page: https://asf.alaska.edu/datasets/daac/opera/
@@ -21,6 +20,8 @@ class OPERAS1Product(S1Product):
         'polarization': {
             'path': ['AdditionalAttributes', ('Name', 'POLARIZATION'), 'Values']
         },  # dual polarization is in list rather than a 'VV+VH' style format
+        'tileID': {'path': ['AdditionalAttributes', ('Name', 'MGRS_TILE_ID'), 'Values', 0]},
+        'productVersion': {'path': ['AdditionalAttributes', ('Name', 'PRODUCT_VERSION'), 'Values', 0]},
     }
 
     _subclass_concept_ids = {
@@ -42,6 +43,8 @@ class OPERAS1Product(S1Product):
         'C2803501758-ASF',
         'C3294057315-ASF',
         'C1271830354-ASF',
+        'C1275699124-ASF',
+        'C4090131664-ASF',
     }
 
     def __init__(self, args: Dict = {}, session: ASFSession = ASFSession()):
@@ -64,9 +67,24 @@ class OPERAS1Product(S1Product):
             for entry in self.properties['bytes']
         }
 
-        center = self.centroid()
-        self.properties['centerLat'] = center.y
-        self.properties['centerLon'] = center.x
+        if self.properties['processingLevel'] is None:
+            self.properties['processingLevel'] = self.umm_get(
+                self.umm, 'AdditionalAttributes', ('Name', 'PRODUCT_TYPE'), 'Values', 0)
+
+        if self.properties['processingLevel'] == 'DIST-ALERT-S1':
+            west, north, east, south = self.umm['SpatialExtent'][
+                'HorizontalSpatialDomain']['Geometry']['BoundingRectangles'][0].values()
+
+            self.geometry = {'coordinates': [[[west, north], [east, north], [
+                east, south], [west, south], [west, north]]], 'type': 'Polygon'}
+
+        if self.properties['processingLevel'] == 'TROPO-ZENITH':
+            self.properties['centerLat'] = None
+            self.properties['centerLon'] = None
+        else:
+            center = self.centroid()
+            self.properties['centerLat'] = center.y
+            self.properties['centerLon'] = center.x
 
         self.properties.pop('frameNumber')
 
@@ -117,7 +135,24 @@ class OPERAS1Product(S1Product):
 
             self.properties['zarrUri'] = self.find_urls(extension='.gz', pattern=product_zarr, directAccess=True)[0]
             self.properties['zarrStackUri'] = self.find_urls(extension='.gz', pattern=r'.*short_wavelength_displacement.zarr.json.gz', directAccess=True)[0]
-
+        elif processingLevel == 'DISP-S1-STATIC':
+            self.properties['frameNumber'] = try_parse_int(
+                self.umm_get(
+                    self.umm,
+                    'AdditionalAttributes',
+                    ('Name', 'FRAME_NUMBER'),
+                    'Values', 
+                    0)
+                )
+            self.properties['pathNumber'] = try_parse_int(
+                self.umm_get(
+                    self.umm,
+                    'AdditionalAttributes',
+                    ('Name', 'PATH_NUMBER'),
+                    'Values', 
+                    0)
+                )
+            pass
     @staticmethod
     def get_default_baseline_product_type() -> None:
         """

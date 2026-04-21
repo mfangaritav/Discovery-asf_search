@@ -31,6 +31,7 @@ from Search.test_search import (
     run_test_ASFSearchResults,
     run_test_build_subqueries,
     run_test_dataset_search,
+    run_test_granule_search_patterns,
     run_test_keyword_aliasing_results,
     run_test_search,
     run_test_search_http_error,
@@ -80,6 +81,9 @@ from Serialization.test_serialization import run_test_serialization
 import nbformat
 from nbconvert.preprocessors import ExecutePreprocessor
 
+from ASFProduct.test_ASFSubproduct import run_test_ASFSubproduct
+from tests.Search.test_collection_attributes import run_test_collection_attributes
+
 
 # asf_search.ASFProduct Tests
 def test_ASFProduct(**args) -> None:
@@ -89,6 +93,20 @@ def test_ASFProduct(**args) -> None:
     test_info = args['test_info']
     geographic_response = get_resource(test_info['products'])
     run_test_ASFProduct(geographic_response)
+
+
+def test_ASFSubproduct(**args) -> None:
+    """
+    Tests ASFProduct subclasses for properties and basic functionality
+    """
+    session = args['config'].getoption('authenticated_session')
+
+    test_info = args['test_info']
+    scene_names = test_info['scenes']
+    expected_subclass = test_info['expected_subclass']
+    opts = ASFSearchOptions(**test_info.get('opts', {}), session=session)
+
+    run_test_ASFSubproduct(scene_names=scene_names, expected_subclass=expected_subclass, opts=opts)
 
 
 def test_ASFProduct_Stack(**args) -> None:
@@ -568,6 +586,13 @@ def test_build_subqueries(**kwargs) -> None:
     run_test_build_subqueries(params, expected)
 
 
+def test_granule_search_patterns(**args):
+    test_info = args['test_info']
+    params = test_info['params']
+    output = test_info['output']
+    run_test_granule_search_patterns(params, output)
+
+
 def test_serialization(**args) -> None:
     test_info = args['test_info']
     product = get_resource(test_info.get('product'))
@@ -627,6 +652,14 @@ def test_keyword_aliasing_results(**args) -> None:
     opts.maxResults = 250
 
     run_test_keyword_aliasing_results(opts)
+
+
+def test_collection_attributes(**args) -> None:
+    params = args['test_info']['params']
+    expected_attributes = args['test_info']['expected_attributes']
+    expect_failure = args['test_info'].get('expect_failure', False)
+    session = args['config'].getoption('authenticated_session')
+    run_test_collection_attributes(params, expected_attributes, session, expect_failure)
 
 
 # Finds and loads file from yml_tests/Resouces/ if loaded field ends with .yml/yaml extension
