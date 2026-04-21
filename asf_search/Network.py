@@ -208,7 +208,7 @@ class Network(Stack):
                 remove_list.append((pair.ref_time.date(), pair.sec_time.date()))
         self.remove_list = remove_list
 
-    def get_target_dates(self, sub, bridge_target = None):
+    def get_target_dates(self, sub, bridge_target = None, multiyear_temporal_baseline = None):
         """
         Finds the dates around a bridge_target for given stack
         
@@ -217,11 +217,13 @@ class Network(Stack):
         """
         if bridge_target is None:
             bridge_target = self.bridge_target_date
+        if multiyear_temporal_baseline is None:
+            multiyear_temporal_baseline = self.inseason_temporal_baseline
         years = list(set([date.strftime('%Y') for date in sub]))
         dates_target = []
         for year in years:
             target = datetime.strptime(f"{year}-{bridge_target}",'%Y-%m-%d').date()
-            s = [date for date in sub if abs((date-target).days) <= self.inseason_temporal_baseline]
+            s = [date for date in sub if abs((date-target).days) <= multiyear_temporal_baseline]
             if len(s) > 0:
                 dates_target.append(s)
         return dates_target
@@ -244,7 +246,7 @@ class Network(Stack):
                    index2 = j
         return index1, index2
 
-    def connect_components(self):
+    def connect_components(self, multiyear_temporal_baseline = None):
         """
         Connects multiple networks using three options:
             - Search for the last year in first network and the first year in the last network and connects the target dates
@@ -277,21 +279,21 @@ class Network(Stack):
             sub2 = dates_components[con[1]]
 
             #Ideally the connection is made with the bridge_target
-            target_dates1 = self.get_target_dates(sub1)
+            target_dates1 = self.get_target_dates(sub1, multiyear_temporal_baseline = multiyear_temporal_baseline)
 
             #In case the first stack does not have dates around it, change the bridge_date
             if len(target_dates1)==0:
                 bridge_target = mids[con[0]].strftime('%m-%d')
-                target_dates1 = self.get_target_dates(sub1, bridge_target = bridge_target)
-                target_dates2 = self.get_target_dates(sub2, bridge_target = bridge_target)
+                target_dates1 = self.get_target_dates(sub1, bridge_target = bridge_target, multiyear_temporal_baseline = multiyear_temporal_baseline)
+                target_dates2 = self.get_target_dates(sub2, bridge_target = bridge_target, multiyear_temporal_baseline = multiyear_temporal_baseline)
             else:
-                target_dates2 = self.get_target_dates(sub2)
+                target_dates2 = self.get_target_dates(sub2, multiyear_temporal_baseline = multiyear_temporal_baseline)
 
             #In case the second stack does not have dates around it, change the bridge_date
             if len(target_dates2) == 0:
                 bridge_target = mids[con[1]].strftime('%m-%d')
-                target_dates2 = self.get_target_dates(sub2, bridge_target = bridge_target)
-                temp = self.get_target_dates(sub1, bridge_target = bridge_target)
+                target_dates2 = self.get_target_dates(sub2, bridge_target = bridge_target, multiyear_temporal_baseline = multiyear_temporal_baseline)
+                temp = self.get_target_dates(sub1, bridge_target = bridge_target, multiyear_temporal_baseline = multiyear_temporal_baseline)
 
                 #In case the first stack has dates around it, change the bridge_date
                 if len(temp) > 0:
@@ -363,6 +365,8 @@ class Network(Stack):
             G.add_node(date_str)
             G.nodes[date_str]["date"] = date_str
             G.nodes[date_str]["perp_bs"] = Pair(self.geo_reference, product).perpendicular_baseline
+            if G.nodes[date_str]["perp_bs"] is None:
+                G.nodes[date_str]["perp_bs"] = 0.0
 
         node_positions = {
             node: datetime.strptime(data["date"], "%Y-%m-%d").timestamp()
@@ -431,9 +435,11 @@ class Network(Stack):
             for pair in other_stack.values():
                 ref = datetime.strftime(pair.ref_time.date(), "%Y-%m-%d")
                 sec = datetime.strftime(pair.sec_time.date(), "%Y-%m-%d")
-                if ref in node_positions and sec in node_positions:
+                if ref in node_positions and sec in node_positions and ref in node_y_positions and sec in node_y_positions:
                     edge_x.extend([node_positions[ref], node_positions[sec], None])
+                    #print('node_positions',node_positions[ref], node_positions[sec])
                     edge_y.extend([node_y_positions[ref], node_y_positions[sec], None])
+                    #print('node_y_positions',node_y_positions[ref], node_y_positions[sec])
             edge_traces.append(go.Scatter(
                 x=edge_x,
                 y=edge_y,
@@ -506,7 +512,7 @@ class Network(Stack):
             pd.date_range(
                 start="-".join(self.opts.start.split("-")[:2]),
                 end="-".join(self.opts.end.split("-")[:2]),
-                freq="MS"
+                freq="YS"
             )
             .strftime("%Y-%m")
             .tolist()
@@ -548,7 +554,7 @@ class Network(Stack):
             layout=go.Layout(
                 showlegend=False,
                 hovermode="closest",
-                height=800,
+                height=600,
                 margin=dict(t=180),
                 xaxis=dict(
                     title="Acquisition Date",
@@ -556,11 +562,15 @@ class Network(Stack):
                     ticktext=date_range,
                     gridcolor="gray",
                     zerolinecolor="gray",
+                    tickfont=dict(family="Helvetica, monospace", size=22),
+                    title_font=dict(family="Helvetica, monospace", size=22),
                 ),
                 yaxis=dict(
                     title="Perpendicular Baseline (m)",
                     gridcolor="gray",
                     zerolinecolor="gray",
+                    tickfont=dict(family="Helvetica, monospace", size=22),
+                    title_font=dict(family="Helvetica, monospace", size=22),
                 ),
                 title=dict(
                     text=plot_header_text,
